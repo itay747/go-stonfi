@@ -1,6 +1,6 @@
 <div align="center">
  <h1>go-stonfi</h1>
- <p>A Go client library for interacting with the Ston.fi API.</p>
+ <p>A Go client library for interacting with the Ston.fi API. (Work in progress) </p>
 </div>
 
 ![License](https://img.shields.io/badge/license-MIT-green)
