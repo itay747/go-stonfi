@@ -1,0 +1,11 @@
+*.json
+*.log
+**/.DS_Store
+*.xlsx
+*.csv
+*.pyc
+*.pyo
+*.zip
+*.zst
+*.py
+*.ipynb
