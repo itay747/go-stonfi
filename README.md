@@ -8,7 +8,7 @@
 
 ## Introduction
 
-`go-stonfi` provides a Go wrapper around the Ston.fi API, allowing developers to easily integrate Ston.fi's financial services into their Go applications. This library aims to simplify the process of making HTTP requests to the Ston.fi API and handling responses.
+`go-stonfi` is a Go wrapper around the [Ston.fi API](https://api.ston.fi/swagger-ui/)
 
 ## Getting Started
 
