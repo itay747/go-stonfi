@@ -18,3 +18,17 @@ type SwapSimulationResponse struct {
 	SlippageTolerance string `json:"slippage_tolerance"`
 	SwapRate          string `json:"swap_rate"`
 }
+type SwapResponse struct {
+	TransactionID  string `json:"transaction_id"`
+	Status         string `json:"status"`
+	PriceImpact    string `json:"price_impact"`
+	AmountIn       string `json:"amount_in"`
+	AmountOut      string `json:"amount_out"`
+	TokenIn        string `json:"token_in"`
+	TokenOut       string `json:"token_out"`
+}
+
+type SwapStatusResponse struct {
+	Status        string `json:"status"`
+	Details       string `json:"details"`
+}

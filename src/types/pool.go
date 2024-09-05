@@ -1,7 +1,8 @@
 package types
 
-type PoolInfoResponse struct {
-	PoolList []struct {
+
+
+type Pool struct {
 		Address                    string `json:"address"`
 		RouterAddress              string `json:"router_address"`
 		Reserve0                   string `json:"reserve0"`
@@ -21,5 +22,11 @@ type PoolInfoResponse struct {
 		Apy7D                      string `json:"apy_7d,omitempty"`
 		Apy30D                     string `json:"apy_30d,omitempty"`
 		Deprecated                 bool   `json:"deprecated"`
-	} `json:"pool_list"`
 }
+type PoolListResponse struct {
+	PoolList []Pool `json:"pool_list"`
+}
+type PoolResponse struct {
+	Pool Pool `json:"pool"`
+}
+

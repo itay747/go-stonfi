@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/fatih/color"
 	"github.com/itay747/go-stonfi/src/client"
@@ -16,7 +15,8 @@ import (
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 func main() {
-	apiKey := os.Getenv("STONFI_API_KEY") | 
+	apiKey := os.Getenv("STONFI_API_KEY") 
+	
 	if apiKey == "" {
 		errorMessage("STONFI_API_KEY environment variable is not set")
 		os.Exit(1)
@@ -33,9 +33,7 @@ func main() {
 
 	flag.Parse()
 
-	client := client.NewStonfiClient(client.StonfiClientOptions{
-		BaseURL: "https://api.ston.fi",
-	})
+	client := client.NewStonfiClient()
 
 	ctx := context.Background()
 
@@ -44,7 +42,6 @@ func main() {
 		handleAssets(ctx, client)
 	case "asset":
 		validateRequiredFlag("asset-address", *assetAddress)
-		handleAsset(ctx, client, *assetAddress)
 	case "wallet-assets":
 		validateRequiredFlag("wallet-address", *walletAddress)
 		handleWalletAssets(ctx, client, *walletAddress)
@@ -52,14 +49,14 @@ func main() {
 		validateRequiredFlag("offer-address", *offerAddress)
 		validateRequiredFlag("ask-address", *askAddress)
 		handleSwapSimulate(ctx, client, *offerAddress, *askAddress, *amount, *slippage)
-	case "pools":
-		handlePools(ctx, client)
+	// case "pools":
+	// 	handlePools(ctx, client)
 	case "pool":
 		validateRequiredFlag("pool-address", *poolAddress)
-		handlePool(ctx, client, *poolAddress)
+		handlePoolByAddress(ctx, client, *poolAddress)
 	case "wallet-pools":
 		validateRequiredFlag("wallet-address", *walletAddress)
-		handleWalletPools(ctx, client, *walletAddress)
+		// handleWalletPools(ctx, client, *walletAddress)
 	case "farms":
 		handleFarms(ctx, client)
 	case "farm":
@@ -67,10 +64,10 @@ func main() {
 		handleFarm(ctx, client, *assetAddress)
 	case "wallet-farms":
 		validateRequiredFlag("wallet-address", *walletAddress)
-		handleWalletFarms(ctx, client, *walletAddress)
+	//	handleWalletFarms(ctx, client, *walletAddress)
 	case "farm-by-pool":
 		validateRequiredFlag("pool-address", *poolAddress)
-		handleFarmByPool(ctx, client, *poolAddress)
+	//	handleFarmByPool(ctx, client, *poolAddress)
 	default:
 		errorMessage("Invalid action. Valid actions are: assets, asset, wallet-assets, swap-simulate, pools, pool, wallet-pools, farms, farm, wallet-farms, farm-by-pool")
 		os.Exit(1)
@@ -110,20 +107,10 @@ func handleSwapSimulate(ctx context.Context, client *client.StonfiClient, offerA
 	printJSON("Swap Simulation", swapSimulation)
 }
 
-func handlePools(ctx context.Context, client *client.StonfiClient) {
-	infoMessage("Fetching all DEX pools...")
-	pools, err := client.GetPools(ctx)
-	if err != nil {
-		errorMessage(fmt.Sprintf("Error fetching pools: %v", err))
-		os.Exit(1)
-	}
-	successMessage("Pools fetched successfully!")
-	printJSON("Pools", pools)
-}
 
-func handlePool(ctx context.Context, client *client.StonfiClient, poolAddress string) {
+func handlePoolByAddress(ctx context.Context, client *client.StonfiClient, poolAddress string) {
 	infoMessage(fmt.Sprintf("Fetching pool details for %s...", poolAddress))
-	pool, err := client.GetPool(ctx, poolAddress)
+	pool, err := client.GetPoolByAddress(ctx, poolAddress)
 	if err != nil {
 		errorMessage(fmt.Sprintf("Error fetching pool: %v", err))
 		os.Exit(1)
@@ -132,16 +119,16 @@ func handlePool(ctx context.Context, client *client.StonfiClient, poolAddress st
 	printJSON("Pool", pool)
 }
 
-func handleWalletPools(ctx context.Context, client *client.StonfiClient, walletAddress string) {
-	infoMessage(fmt.Sprintf("Fetching wallet pools for %s...", walletAddress))
-	walletPools, err := client.GetWalletPools(ctx, walletAddress)
-	if err != nil {
-		errorMessage(fmt.Sprintf("Error fetching wallet pools: %v", err))
-		os.Exit(1)
-	}
-	successMessage("Wallet pools fetched successfully!")
-	printJSON("Wallet Pools", walletPools)
-}
+// func handleWalletPools(ctx context.Context, client *client.StonfiClient, walletAddress string) {
+// 	infoMessage(fmt.Sprintf("Fetching wallet pools for %s...", walletAddress))
+// 	walletPools, err := client.GetWalletPools(ctx, walletAddress)
+// 	if err != nil {
+// 		errorMessage(fmt.Sprintf("Error fetching wallet pools: %v", err))
+// 		os.Exit(1)
+// 	}
+// 	successMessage("Wallet pools fetched successfully!")
+// 	printJSON("Wallet Pools", walletPools)
+// }
 
 func handleFarms(ctx context.Context, client *client.StonfiClient) {
 	infoMessage("Fetching all DEX farms...")
@@ -165,26 +152,26 @@ func handleFarm(ctx context.Context, client *client.StonfiClient, farmAddress st
 	printJSON("Farm", farm)
 }
 
-func handleWalletFarms(ctx context.Context, client *client.StonfiClient, walletAddress string) {
-	infoMessage(fmt.Sprintf("Fetching wallet farms for %s...", walletAddress))
-	walletFarms, err := client.GetWalletFarms(ctx, walletAddress)
-	if err != nil {
-		errorMessage(fmt.Sprintf("Error fetching wallet farms: %v", err))
-		os.Exit(1)
-	}
-	successMessage("Wallet farms fetched successfully!")
-	printJSON("Wallet Farms", walletFarms)
-}
+// func handleWalletFarms(ctx context.Context, client *client.StonfiClient, walletAddress string) {
+// 	infoMessage(fmt.Sprintf("Fetching wallet farms for %s...", walletAddress))
+// 	walletFarms, err := client.GetWalletFarms(ctx, walletAddress)
+// 	if err != nil {
+// 		errorMessage(fmt.Sprintf("Error fetching wallet farms: %v", err))
+// 		os.Exit(1)
+// 	}
+// 	successMessage("Wallet farms fetched successfully!")
+// 	printJSON("Wallet Farms", walletFarms)
+// }
 
-func handleFarmByPool(ctx context.Context, client *client.StonfiClient, poolAddress string) {
+func handleFarmsByPool(ctx context.Context, client *client.StonfiClient, poolAddress string) {
 	infoMessage(fmt.Sprintf("Fetching farms for pool %s...", poolAddress))
-	poolFarms, err := client.GetFarmsByPool(ctx, poolAddress)
+	farm, err := client.GetFarm(ctx, poolAddress)
 	if err != nil {
 		errorMessage(fmt.Sprintf("Error fetching farms for pool: %v", err))
 		os.Exit(1)
 	}
 	successMessage("Farms for pool fetched successfully!")
-	printJSON("Pool Farms", poolFarms)
+	fmt.Printf("Farm is: %+v", farm)
 }
 
 func printJSON(title string, data interface{}) {
@@ -214,9 +201,4 @@ func successMessage(message string) {
 
 func errorMessage(message string) {
 	color.New(color.FgRed).Println("\n[ERROR]", message)
-}
-
-func separator() {
-	color.New(color.FgMagenta).Println(strings.Repeat("=", 80))
-	time.Sleep(500 * time.Millisecond)
 }

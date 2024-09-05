@@ -5,11 +5,10 @@ import (
 	"net/url"
 	"regexp"
 )
-
+var norm_req_re = regexp.MustCompile(`{([a-zA-Z0-9_]+)}`)
 // normalizeRequest prepares the request URL and query parameters.
 func NormalizeRequest(path string, options map[string][]string) (string, map[string][]string, error) {
-	re := regexp.MustCompile(`{([a-zA-Z0-9_]+)}`)
-	pathWithParams := re.ReplaceAllStringFunc(path, func(m string) string {
+	pathWithParams := norm_req_re.ReplaceAllStringFunc(path, func(m string) string {
 		key := m[1 : len(m)-1] // Remove the curly braces
 		values, exists := options[key]
 		if !exists || len(values) == 0 {
