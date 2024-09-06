@@ -15,12 +15,6 @@ import (
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 func main() {
-	apiKey := os.Getenv("STONFI_API_KEY") 
-	
-	if apiKey == "" {
-		errorMessage("STONFI_API_KEY environment variable is not set")
-		os.Exit(1)
-	}
 
 	action := flag.String("action", "", "Action to perform (assets, asset, wallet-assets, swap-simulate, pools, farms, farm-by-pool)")
 	assetAddress := flag.String("asset-address", "", "Asset address (for asset, wallet-assets, swap-simulate actions)")
@@ -163,16 +157,16 @@ func handleFarm(ctx context.Context, client *client.StonfiClient, farmAddress st
 // 	printJSON("Wallet Farms", walletFarms)
 // }
 
-func handleFarmsByPool(ctx context.Context, client *client.StonfiClient, poolAddress string) {
-	infoMessage(fmt.Sprintf("Fetching farms for pool %s...", poolAddress))
-	farm, err := client.GetFarm(ctx, poolAddress)
-	if err != nil {
-		errorMessage(fmt.Sprintf("Error fetching farms for pool: %v", err))
-		os.Exit(1)
-	}
-	successMessage("Farms for pool fetched successfully!")
-	fmt.Printf("Farm is: %+v", farm)
-}
+// func handleFarmsByPool(ctx context.Context, client *client.StonfiClient, poolAddress string) {
+// 	infoMessage(fmt.Sprintf("Fetching farms for pool %s...", poolAddress))
+// 	farm, err := client.GetFarm(ctx, poolAddress)
+// 	if err != nil {
+// 		errorMessage(fmt.Sprintf("Error fetching farms for pool: %v", err))
+// 		os.Exit(1)
+// 	}
+// 	successMessage("Farms for pool fetched successfully!")
+// 	fmt.Printf("Farm is: %+v", farm)
+// }
 
 func printJSON(title string, data interface{}) {
 	fmt.Printf("\n%s:\n", color.New(color.FgCyan, color.Bold).SprintFunc()(title))
