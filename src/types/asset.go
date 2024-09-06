@@ -38,10 +38,7 @@ type AssetListResponse struct {
 	AssetList []Asset `json:"asset_list"`
 }
 
-// Struct for unmarshalling response from `/v1/wallets/{addr_str}/assets`
-type WalletAssetsListResponse struct {
-	Assets []Asset `json:"assets"`
-}
+
 
 type AssetList struct {
 	ContractAddress string `json:"contract_address"`

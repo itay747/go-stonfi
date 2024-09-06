@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/imroc/req/v3"
 	"github.com/itay747/go-stonfi/src/types"
 )
 
 var BaseURLStr = "https://api.ston.fi/v1"
+var EarliestDate = time.Date(2022, 11, 17, 0, 0, 0, 0, time.UTC)
 
 type StonfiClient struct {
 	Client *req.Client
@@ -234,6 +236,71 @@ func (c *StonfiClient) GetFarmsByPool(ctx context.Context, poolAddress string) (
 	return response, nil
 }
 
+// Check if the time range is valid for retrieving historical data from `/v1/`
+func checkValidTimeRange(startDate, endDate time.Time) error {
+	if endDate.Before(startDate) || endDate.Equal(startDate) {
+		return fmt.Errorf("endDate must be after startDate (endDate: %s, startDate: %s)", endDate, startDate)
+	} else if endDate.Sub(startDate) > time.Hour*24 {
+		return fmt.Errorf("time range must be less than 24 hours (timeSpan: %s)", endDate.Sub(startDate))
+	} else if startDate.Before(EarliestDate) || endDate.Before(EarliestDate) {
+		return fmt.Errorf("time range must be after ston.fi mainnet launch date of %s (startDate: %s, endDate: %s)", EarliestDate, startDate, endDate)
+	}
+	return nil
+}
+
+// GetStats retrieves aggregated statistics for a specific time range from `/v1/stats/dex`
+func (c *StonfiClient) GetStats(ctx context.Context, startDate, endDate time.Time) (*types.DexStatsResponse, error) {
+
+	if err := checkValidTimeRange(startDate, endDate); err != nil {
+		return nil, err
+	}
+
+	queryParams := url.Values{
+		"start_date": []string{startDate.Format(time.RFC3339)},
+		"end_date":   []string{endDate.Format(time.RFC3339)},
+	}
+	url := c.buildQueryParams("/v1/stats/dex", queryParams)
+	var response *types.DexStatsResponse
+	if err := c.request(ctx, http.MethodGet, url, nil, &response); err != nil {
+		return nil, err
+	}
+	return response, nil
+}
+
+// Retrieve historical swap data for a specific time range `/v1/stats/operations`
+func (c *StonfiClient) GetHistoricalSwaps(ctx context.Context, startDate, endDate time.Time) (*types.OperationsStatsResponse, error) {
+	if err := checkValidTimeRange(startDate, endDate); err != nil {
+		return nil, err
+	}
+	queryParams := url.Values{
+		"start_date": []string{startDate.Format(time.RFC3339)},
+		"end_date":   []string{endDate.Format(time.RFC3339)},
+	}
+	url := c.buildQueryParams("/v1/stats/operations", queryParams)
+	var response *types.OperationsStatsResponse
+	if err := c.request(ctx, http.MethodGet, url, nil, &response); err != nil {
+		return nil, err
+	}
+	return response, nil
+}
+
+// Retrieve historical pool data for a specific time range `/v1/stats/pools`
+func (c *StonfiClient) GetPoolStats(ctx context.Context, startDate, endDate time.Time) (*types.PoolStatsResponse, error) {
+	if err := checkValidTimeRange(startDate, endDate); err != nil {
+		return nil, err
+	}
+	queryParams := url.Values{
+		"start_date": []string{startDate.Format(time.RFC3339)},
+		"end_date":   []string{endDate.Format(time.RFC3339)},
+	}
+	url := c.buildQueryParams("/v1/stats/pools", queryParams)
+	var response *types.PoolStatsResponse
+	if err := c.request(ctx, http.MethodGet, url, nil, &response); err != nil {
+		return nil, err
+	}
+	return response, nil
+}
+
 // GetWalletAssets fetches details of all assets associated with a specific wallet.
 func (c *StonfiClient) GetWalletAssets(ctx context.Context, walletAddress string) (*types.SearchAssetsResponse, error) {
 	endpoint := fmt.Sprintf("/wallets/%s/assets", walletAddress)
@@ -245,16 +312,65 @@ func (c *StonfiClient) GetWalletAssets(ctx context.Context, walletAddress string
 	}
 	return response, nil
 }
-func (c *StonfiClient) GetWalletAsset(ctx context.Context, walletAddressStr string, assetStr string) (*types.WalletAssetsListResponse, error) {
+
+// GetWalletAsset fetches details of a specific asset associated with a specific wallet.
+func (c *StonfiClient) GetWalletAsset(ctx context.Context, walletAddressStr string, assetStr string) (*types.WalletAssetResponse, error) {
 	endpoint := fmt.Sprintf("/v1/wallets/%s/assets/%s", walletAddressStr, assetStr)
 	url := c.buildQueryParams(endpoint, nil)
-	var response *types.WalletAssetsListResponse
+	var response *types.WalletAssetResponse
 	if err := c.request(ctx, http.MethodGet, url, nil, &response); err != nil {
 		return nil, err
 	}
 	return response, nil
 }
 
-// Ston.fi stats endpoints
+// Wallet-specific farms
+func (c *StonfiClient) GetWalletFarms(ctx context.Context, walletAddress string) (*types.FarmListResponse, error) {
+	endpoint := fmt.Sprintf("/wallets/%s/farms", walletAddress)
+	url := c.buildQueryParams(endpoint, nil)
+	var response *types.FarmListResponse
+	if err := c.request(ctx, http.MethodGet, url, nil, &response); err != nil {
+		return nil, err
+	}
+	return response, nil
+}
+func (c *StonfiClient) GetWalletFarm(ctx context.Context, walletAddress string, farmAddress string) (*types.FarmResponse, error) {
+	endpoint := fmt.Sprintf("/wallets/%s/farms/%s", walletAddress, farmAddress)
+	url := c.buildQueryParams(endpoint, nil)
+	var response *types.FarmResponse
+	if err := c.request(ctx, http.MethodGet, url, nil, &response); err != nil {
+		return nil, err
+	}
+	return response, nil
+}
 
-// Wallet operations in pools
+// Wallet-specific pools
+func (c *StonfiClient) GetWalletPools(ctx context.Context, walletAddress string) (*types.PoolListResponse, error) {
+	endpoint := fmt.Sprintf("/wallets/%s/pools", walletAddress)
+	url := c.buildQueryParams(endpoint, nil)
+	var response *types.PoolListResponse
+	if err := c.request(ctx, http.MethodGet, url, nil, &response); err != nil {
+		return nil, err
+	}
+	return response, nil
+}
+func (c *StonfiClient) GetWalletPool(ctx context.Context, walletAddress string, poolAddress string) (*types.PoolResponse, error) {
+	endpoint := fmt.Sprintf("/wallets/%s/pools/%s", walletAddress, poolAddress)
+	url := c.buildQueryParams(endpoint, nil)
+	var response *types.PoolResponse
+	if err := c.request(ctx, http.MethodGet, url, nil, &response); err != nil {
+		return nil, err
+	}
+	return response, nil
+}
+
+// Wallet-specific operations
+func (c *StonfiClient) GetWalletOperations(ctx context.Context, walletAddress string) (*types.WalletOperationsResponse, error) {
+	endpoint := fmt.Sprintf("/wallets/%s/operations", walletAddress)
+	url := c.buildQueryParams(endpoint, nil)
+	var response *types.WalletOperationsResponse
+	if err := c.request(ctx, http.MethodGet, url, nil, &response); err != nil {
+		return nil, err
+	}
+	return response, nil
+}
